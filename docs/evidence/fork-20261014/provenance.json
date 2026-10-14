@@ -1,0 +1,12 @@
+{
+  "upstream_repository": "https://github.com/GenielabsOpenSource/spine-animation-ai",
+  "upstream_commit": "702b71689cac826efee942ee4564fef9560d6ef8",
+  "fork_repository": "https://github.com/0xOutOfGas/spine-animation-ai",
+  "adaptation_branch": "codex/codex-toywatch",
+  "implementation_commit": "b65388447f7dbf287d0bacfee37c264942803aea",
+  "skill_name": "spine-animation-codex",
+  "source_skill_scope": "global Codex",
+  "project_local_skill": "spine-animation (retained for Gemini)",
+  "published_branch_verified_in_browser": true,
+  "screenshot_sha256": "dd9226894f1f5e507c95f661bc7deea0e94f4b9e3fba6accbb707e5835aaca5e"
+}

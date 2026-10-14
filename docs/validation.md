@@ -32,3 +32,7 @@ python tests/godot/run.py --godot "$GODOT" --runtime-bin "$SPINE_BIN" --evidence
 `GODOT` is the actual editor executable. `SPINE_BIN` is an existing licensed compatible GDExtension `bin/` directory. The runner copies only this host's runtime into a temporary isolated project, not into the user's game; Godot still uses its normal local user-data/editor-settings directories. Fresh evidence destinations prevent accidental replacement of older results. Logs and SHA-256 identities are saved.
 
 Not checked: Spine 4.2 native playback, other host platforms, a packaged game, Toywatch combat regression, actual game event wiring, or GPU/manual game rendering and sound. The example is independent demonstration artwork. No Toywatch gameplay source, project-local agent skill or existing game assets were changed by this adaptation.
+
+## Fork source record
+
+The implementation was published as [`b65388447f7dbf287d0bacfee37c264942803aea`](https://github.com/0xOutOfGas/spine-animation-ai/commit/b65388447f7dbf287d0bacfee37c264942803aea) on `codex/codex-toywatch` and verified on the public branch page. [Browser proof](evidence/fork-20261014/branch.jpg) and [source provenance](evidence/fork-20261014/provenance.json) record that state. Later evidence-only commits do not alter the checked runtime inputs.
