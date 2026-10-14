@@ -1,125 +1,21 @@
-# Getting Started with Spine Animation AI
+# Quickstart for Codex
 
-This guide walks you through your first animation from scratch.
+Install the global `spine-animation-codex` skill as described in [README.md](../README.md). Keep any project-local skill used by another agent intact. The skill reads local scripts in place and uses the native ChatGPT Image tool; no model key or alternate agent home path is required.
 
-## Prerequisites
+1. Supply separated transparent parts plus a reference, a complete image to decompose, or an existing Spine export. State the asset's purpose and desired actions. For Toywatch turrets, start with a static idle and short fire recoil.
+2. Codex inspects the images. For artwork generation, missing hidden surfaces or reskins, use [the ChatGPT Image workflow](../references/chatgpt-image.md). Save the selected source, prompt and hashes.
+3. Crop named measured regions with `scripts/split_character.py`; use automatic components only as a draft. Preserve alpha. Author measured geometry after reviewing the pixels.
+4. Run `scripts/build_turret.py` for a fixed-base 360-degree turret, or the character helpers after constructing a real rig configuration from the positioning report.
+5. Inspect the output at game scale and through an angle/recoil sweep. Verify it in the installed engine runtime before integrating presentation events.
 
-- Python 3.9+
-- `pip install opencv-python Pillow numpy`
-- Claude (via OpenClaw, Claude.ai, or API) with the `SKILL.md` loaded
+Core dependencies: Python 3.10+, Pillow, NumPy (`requirements.txt`). OpenCV (`requirements-positioning.txt`) is optional. Use the available bundled runtime or a workspace venv. `--help` on each helper documents exact inputs. Outputs use fresh versioned directories/files by default.
 
----
+A minimal reproducible sample:
 
-## Option A: I have separated body part PNGs + a reference image (fastest path)
-
-This is the best-case scenario. The SIFT algorithm will auto-position everything.
-
-**Step 1: Organize your files**
-
-```
-my-character/
-├── head.png
-├── torso.png
-├── left-upper-arm.png
-├── left-lower-arm.png
-├── right-upper-arm.png
-├── right-lower-arm.png
-├── left-thigh.png
-├── left-leg.png
-├── right-thigh.png
-├── right-leg.png
-└── reference.png   ← the assembled character
+```sh
+python scripts/build_turret.py --config examples/toywatch-turret/rig.config.json --output output/turret-v1
+python -m unittest discover -s tests -v
+python build_skill.py --check
 ```
 
-**Step 2: Auto-position**
-
-```bash
-python3 scripts/position_parts.py \
-  --reference my-character/reference.png \
-  --parts my-character/ \
-  --output layout.json \
-  --debug debug/
-```
-
-Check `debug/comparison.png` — it shows the reference vs your auto-assembled composite.
-If parts look misaligned, adjust `--ratio` (try 0.75 for more aggressive matching)
-or manually edit `layout.json` offsets.
-
-**Step 3: Ask Claude**
-
-```
-Here's my layout.json [attach]. The reference image is reference.png [attach].
-Build a Spine skeleton with idle and walk animations.
-Output skeleton.json.
-```
-
----
-
-## Option B: I have an atlas + spritesheet
-
-**Step 1: Point Claude at your files**
-
-```
-I have skeleton.atlas [attach] and skeleton.png [attach].
-Build a Spine skeleton with idle animation.
-Use the region names from the atlas as bone names.
-```
-
-Claude will parse the atlas, set up the skeleton, and output `skeleton.json`.
-
-**Step 2: Generate preview**
-
-```bash
-python3 scripts/generate_spine_player.py \
-  --skeleton skeleton.json \
-  --atlas skeleton.atlas \
-  --atlas-image skeleton.png \
-  --output preview.html
-```
-
-Open `preview.html` in Chrome/Firefox.
-
----
-
-## Option C: I have an existing Spine JSON and want to fix it
-
-```
-Here's my skeleton.json [attach]. The right arm is positioned too high.
-Adjust it down by about 80 units and give me the corrected JSON.
-Also add a wave animation.
-```
-
-Claude will output a corrected JSON and an `adjustments.json` showing exactly what changed.
-
----
-
-## Understanding the Output Files
-
-| File | What it is |
-|------|-----------|
-| `skeleton.json` | Spine-compatible skeleton. Load in Spine editor, Unity, Godot, etc. |
-| `skeleton.atlas` | Atlas metadata. Required alongside skeleton.json for any Spine runtime. |
-| `skeleton.png` | The packed texture. Referenced by the atlas. |
-| `adjustments.json` | Record of what the AI changed. Useful for review and iteration. |
-| `preview.html` | Self-contained HTML preview. Open in any browser — no server needed. |
-
----
-
-## Troubleshooting
-
-**position_parts.py fails with "not enough matches"**
-- Try lowering `--ratio` to 0.75 or even 0.70
-- Make sure your body-part PNGs have alpha transparency (transparent background)
-- Parts with very little texture (solid flat colors) may not have enough SIFT keypoints — use `--min-matches 2`
-
-**The composite looks mostly right but one part is wrong**
-- Manually edit `layout.json` — find the part's `x`/`y` offset and adjust
-- Or tell Claude: "The left arm is off by about 30px to the right"
-
-**preview.html shows a white screen**
-- Make sure the atlas PNG path in the atlas file matches the actual filename
-- Check the browser console for errors
-
-**Spine editor says JSON is invalid**
-- Make sure you're using Spine 4.2 (this skill targets 4.2 format)
-- Check `references/spine-json-spec.md` for format details
+[Turret configuration](../references/toywatch-turrets.md) · [Godot integration](../references/godot.md) · [Validation scope](validation.md)

@@ -1,230 +1,99 @@
 #!/usr/bin/env python3
+"""Crop a ChatGPT Image parts sheet locally; this helper never generates images.
+
+Prefer --regions for semantic parts. --auto drafts connected alpha components
+and requires OpenCV; disconnected details should be grouped by named rectangles.
 """
-split_character.py — Generate a sprite-sheet atlas from a full character image
-using Google Gemini image generation, then segment individual body parts via
-OpenCV connected-components analysis.
-
-Usage:
-    python split_character.py <input_image> [--output-dir output_parts]
-        [--atlas-out atlas.png] [--min-area 500] [--padding 12]
-        [--bg-threshold 240]
-
-Requires:
-    pip install google-generativeai opencv-python Pillow numpy
-    Environment variable GEMINI_API_KEY must be set.
-"""
-
 import argparse
-import os
-import sys
+import json
+from pathlib import Path
 
-import cv2
 import numpy as np
 from PIL import Image
+from asset_io import asset_name, sha256, write_json
 
 
-def get_gemini_client():
-    """Initialise the Gemini generative-AI client, or exit with a helpful
-    error if the API key is missing."""
-    api_key = os.environ.get("GEMINI_API_KEY")
-    if not api_key:
-        print(
-            "ERROR: GEMINI_API_KEY environment variable is not set.\n"
-            "Get a free API key at: https://aistudio.google.com/app/apikey\n"
-            "Then run:\n"
-            "  export GEMINI_API_KEY=your_key_here",
-            file=sys.stderr,
-        )
-        sys.exit(1)
-
-    from google import genai
-
-    client = genai.Client(api_key=api_key)
-    return client
-
-
-POSITIVE_PROMPT = (
-    "A complete 2D game sprite sheet texture atlas for Spine animation of the "
-    "exact character in the reference image. The character is completely "
-    "deconstructed into separated, isolated body parts. Separated individual "
-    "parts laid out flatly: isolated head, isolated torso, isolated upper arms, "
-    "lower arms, hands, upper legs, lower legs, and feet. Spread out with clear "
-    "space between every single body part. No overlapping parts. Clean solid "
-    "white background. CRITICAL: Maintain the exact same art style, exact same "
-    "shading, exact face, and exact color palette as the reference image. "
-    "Identical style match, 2D game asset, flat layout, character design sheet."
-)
-
-NEGATIVE_PROMPT = (
-    "3D, realistic, altered style, different art style, different face, "
-    "redesign, overlapping parts, connected limbs, full body standing, dynamic "
-    "pose, background scenery, shadows, gradients on background, messy layout, "
-    "missing limbs, merged layers, text, watermarks."
-)
-
-
-def generate_atlas(client, input_image_path: str, atlas_out: str) -> str:
-    """Send the reference image to Gemini and save the generated atlas PNG."""
-    from google.genai import types
-
-    ref_image = Image.open(input_image_path)
-
-    response = client.models.generate_content(
-        model="gemini-3.1-flash-image-preview",
-        contents=[
-            POSITIVE_PROMPT,
-            f"Negative prompt: {NEGATIVE_PROMPT}",
-            ref_image,
-        ],
-        config=types.GenerateContentConfig(
-            response_modalities=["IMAGE", "TEXT"],
-        ),
-    )
-
-    # Extract the generated image from the response parts
-    for part in response.candidates[0].content.parts:
-        if part.inline_data is not None:
-            image_data = part.inline_data.data
-            with open(atlas_out, "wb") as f:
-                f.write(image_data)
-            return atlas_out
-
-    print("ERROR: Gemini did not return an image in its response.", file=sys.stderr)
-    sys.exit(1)
-
-
-def segment_parts(
-    atlas_path: str,
-    output_dir: str,
-    min_area: int = 500,
-    padding: int = 12,
-    bg_threshold: int = 240,
-) -> list[str]:
-    """Detect individual parts in the atlas using connected-components analysis.
-
-    Returns a list of saved part file paths.
-    """
-    img = cv2.imread(atlas_path, cv2.IMREAD_UNCHANGED)
-    if img is None:
-        print(f"ERROR: Could not read atlas image: {atlas_path}", file=sys.stderr)
-        sys.exit(1)
-
-    # Convert to RGBA if needed
-    if img.shape[2] == 3:
-        img = cv2.cvtColor(img, cv2.COLOR_BGR2BGRA)
-
-    # Build a foreground mask: pixels whose RGB channels are all below the
-    # background threshold are considered foreground.
-    bgr = img[:, :, :3]
-    gray = cv2.cvtColor(bgr, cv2.COLOR_BGR2GRAY)
-    _, mask = cv2.threshold(gray, bg_threshold, 255, cv2.THRESH_BINARY_INV)
-
-    # Connected-components analysis (8-connectivity)
-    num_labels, labels, stats, _ = cv2.connectedComponentsWithStats(
-        mask, connectivity=8
-    )
-
-    os.makedirs(output_dir, exist_ok=True)
-
-    saved: list[str] = []
-    part_idx = 0
-    h_img, w_img = img.shape[:2]
-
-    for label_id in range(1, num_labels):  # skip background (label 0)
-        area = stats[label_id, cv2.CC_STAT_AREA]
-        if area < min_area:
-            continue
-
-        x = stats[label_id, cv2.CC_STAT_LEFT]
-        y = stats[label_id, cv2.CC_STAT_TOP]
-        w = stats[label_id, cv2.CC_STAT_WIDTH]
-        h = stats[label_id, cv2.CC_STAT_HEIGHT]
-
-        # Apply padding (clamped to image bounds)
-        x1 = max(x - padding, 0)
-        y1 = max(y - padding, 0)
-        x2 = min(x + w + padding, w_img)
-        y2 = min(y + h + padding, h_img)
-
-        # Crop the RGBA region
-        crop = img[y1:y2, x1:x2].copy()
-
-        # Zero-out pixels that don't belong to this component (make transparent)
-        label_region = labels[y1:y2, x1:x2]
-        component_mask = label_region == label_id
-        crop[~component_mask] = [0, 0, 0, 0]
-
-        out_path = os.path.join(output_dir, f"part_{part_idx:02d}.png")
-        cv2.imwrite(out_path, crop)
-        saved.append(out_path)
-        part_idx += 1
-
-    return saved
+def split_sheet(source, output, regions=None, auto=False, min_area=64, padding=2):
+    source, output = Path(source), Path(output)
+    if output.exists():
+        raise ValueError(f"Output already exists: {output}; choose a versioned directory")
+    if padding < 0 or min_area < 1:
+        raise ValueError("padding must be nonnegative and min-area must be positive")
+    image = Image.open(source).convert("RGBA")
+    alpha = np.asarray(image.getchannel("A"))
+    if not (alpha < 255).any():
+        raise ValueError("Input has no transparent background. Request alpha from ChatGPT Image first")
+    masks = {}
+    if auto:
+        try:
+            import cv2
+        except ImportError as exc:
+            raise ValueError("--auto needs OpenCV; use --regions or install requirements-positioning.txt") from exc
+        count, labels, stats, _ = cv2.connectedComponentsWithStats((alpha > 0).astype(np.uint8), connectivity=8)
+        accepted = [(i, s) for i, s in enumerate(stats[1:], 1) if s[4] >= min_area]
+        accepted.sort(key=lambda item: (int(item[1][1]), int(item[1][0])))
+        regions = {"parts": []}
+        for index, (label, stat) in enumerate(accepted):
+            x, y, w, h = map(int, stat[:4])
+            left, top = max(0, x-padding), max(0, y-padding)
+            right, bottom = min(image.width, x+w+padding), min(image.height, y+h+padding)
+            name = f"part_{index:02d}"
+            regions["parts"].append({"name": name, "rect": [left, top, right-left, bottom-top]})
+            masks[name] = labels[top:bottom, left:right] == label
+    if not isinstance(regions, dict) or not isinstance(regions.get("parts"), list) or not regions["parts"]:
+        raise ValueError("A nonempty parts list is required")
+    items, used = [], set()
+    for spec in regions["parts"]:
+        name = asset_name(spec["name"])
+        if name in used:
+            raise ValueError(f"Duplicate part: {name}")
+        used.add(name)
+        rect = spec.get("rect")
+        if not isinstance(rect, list) or len(rect) != 4 or any(type(v) is not int for v in rect):
+            raise ValueError(f"{name}: rect must be four integer pixels")
+        x, y, w, h = rect
+        if min(x, y) < 0 or min(w, h) <= 0 or x+w > image.width or y+h > image.height:
+            raise ValueError(f"{name}: rect is outside the image")
+        crop = image.crop((x, y, x+w, y+h))
+        if name in masks:
+            pixels = np.array(crop)
+            pixels[~masks[name]] = 0
+            crop = Image.fromarray(pixels)
+        if crop.getchannel("A").getbbox() is None:
+            raise ValueError(f"{name}: crop is empty")
+        pivot = spec.get("pivot_px")
+        if pivot is not None and (len(pivot) != 2 or not all(isinstance(v, (int, float)) and np.isfinite(v) for v in pivot)):
+            raise ValueError(f"{name}: invalid crop-local pivot_px")
+        items.append((crop, {"name": name, "file": name+".png", "rect_px": rect,
+                             "pivot_px": pivot, "alpha_bbox_px": list(crop.getchannel("A").getbbox())}))
+    output.mkdir(parents=True)
+    manifest = {"schema": 1, "source_sha256": sha256(source), "source_size_px": list(image.size),
+                "mode": "auto-draft" if auto else "named-regions", "parts": []}
+    for crop, entry in items:
+        path = output / entry["file"]
+        crop.save(path)
+        entry["sha256"] = sha256(path)
+        manifest["parts"].append(entry)
+    write_json(output / "parts.manifest.json", manifest)
+    return manifest
 
 
 def main():
-    parser = argparse.ArgumentParser(
-        description="Generate a sprite atlas from a character image using "
-        "Gemini, then segment into individual body parts."
-    )
-    parser.add_argument("input_image", help="Path to the character reference image")
-    parser.add_argument(
-        "--output-dir",
-        default="output_parts",
-        help="Directory for cropped part PNGs (default: output_parts)",
-    )
-    parser.add_argument(
-        "--atlas-out",
-        default="atlas.png",
-        help="Output path for the generated atlas PNG (default: atlas.png)",
-    )
-    parser.add_argument(
-        "--min-area",
-        type=int,
-        default=500,
-        help="Minimum component area in pixels to keep (default: 500)",
-    )
-    parser.add_argument(
-        "--padding",
-        type=int,
-        default=12,
-        help="Padding in pixels around each cropped part (default: 12)",
-    )
-    parser.add_argument(
-        "--bg-threshold",
-        type=int,
-        default=240,
-        help="Grayscale threshold above which pixels are treated as background (default: 240)",
-    )
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("input_image", type=Path, help="Existing transparent parts sheet")
+    parser.add_argument("--output-dir", type=Path, required=True)
+    mode = parser.add_mutually_exclusive_group(required=True)
+    mode.add_argument("--regions", type=Path, help="JSON with named parts and crop rectangles")
+    mode.add_argument("--auto", action="store_true", help="Draft unnamed alpha components")
+    parser.add_argument("--min-area", type=int, default=64)
+    parser.add_argument("--padding", type=int, default=2)
     args = parser.parse_args()
-
-    if not os.path.isfile(args.input_image):
-        print(f"ERROR: Input image not found: {args.input_image}", file=sys.stderr)
-        sys.exit(1)
-
-    # --- Step 1: Generate atlas ---
-    print("[1/3] Generating atlas …")
-    client = get_gemini_client()
-    generate_atlas(client, args.input_image, args.atlas_out)
-    print(f"      Atlas saved to {args.atlas_out}")
-
-    # --- Step 2: Segment parts ---
-    print("[2/3] Segmenting parts …")
-    parts = segment_parts(
-        args.atlas_out,
-        args.output_dir,
-        min_area=args.min_area,
-        padding=args.padding,
-        bg_threshold=args.bg_threshold,
-    )
-    print(f"      Found {len(parts)} parts → {args.output_dir}/")
-    for p in parts:
-        print(f"        • {os.path.basename(p)}")
-
-    # --- Step 3: Done ---
-    print("[3/3] Done ✓")
-    print(f"\nParts are in: {args.output_dir}/")
-    print("You can now feed them into position_parts.py (Step 1 of the Spine pipeline).")
+    try:
+        regions = json.loads(args.regions.read_text(encoding="utf-8")) if args.regions else None
+        result = split_sheet(args.input_image, args.output_dir, regions, args.auto, args.min_area, args.padding)
+    except (ValueError, OSError, KeyError, TypeError) as exc:
+        parser.exit(2, f"ERROR: {exc}\n")
+    print(json.dumps({"output": str(args.output_dir), "parts": len(result["parts"]), "mode": result["mode"]}))
 
 
 if __name__ == "__main__":

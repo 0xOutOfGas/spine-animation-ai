@@ -1,6 +1,6 @@
 # Adjustment Format Reference
 
-When Claude analyzes a Spine skeleton and suggests corrections, it outputs an **adjustment JSON**
+When Codex analyzes a Spine skeleton and suggests corrections, it outputs an **adjustment JSON**
 that documents every change made. This format is designed to be:
 
 - **Readable** — humans can inspect and understand each change
@@ -105,7 +105,7 @@ The adjustments are applied directly to the Spine JSON's `skins` section:
 }]
 ```
 
-You can apply them programmatically or ask Claude:
+You can apply them programmatically or ask Codex:
 
 ```
 Here's adjustments.json [attach] and skeleton.json [attach].

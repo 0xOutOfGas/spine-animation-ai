@@ -1,0 +1,64 @@
+{
+  "name": "toy-turret",
+  "profile": "toywatch_turret",
+  "spine_version": "4.3.26",
+  "canvas_size_px": [
+    256,
+    256
+  ],
+  "pivot_px": [
+    128,
+    128
+  ],
+  "forward_px": [
+    1,
+    0
+  ],
+  "display_size_px": 64,
+  "cell_size_px": 72,
+  "head_max_radius_cell": 0.45,
+  "parts": [
+    {
+      "name": "base",
+      "role": "base",
+      "file": "images/base.png",
+      "position_px": [
+        68,
+        69.5
+      ]
+    },
+    {
+      "name": "receiver",
+      "role": "aim",
+      "file": "images/receiver.png",
+      "position_px": [
+        78,
+        82.5
+      ]
+    },
+    {
+      "name": "barrel",
+      "role": "recoil",
+      "file": "images/barrel.png",
+      "position_px": [
+        111,
+        107
+      ]
+    }
+  ],
+  "muzzles": [
+    {
+      "name": "main",
+      "position_px": [
+        220.5,
+        128
+      ]
+    }
+  ],
+  "fire": {
+    "duration": 0.18,
+    "peak_time": 0.03,
+    "recover_time": 0.18,
+    "recoil_cell": 0.01
+  }
+}

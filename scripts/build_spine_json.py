@@ -40,6 +40,9 @@ import argparse
 import json
 import hashlib
 import sys
+import copy
+import re
+from pathlib import Path
 
 # ─── Bezier curve presets ────────────────────────────────────────────────────
 EASE = [0.25, 0, 0.75, 1]        # Standard ease in-out (most common)
@@ -117,13 +120,18 @@ def _convert_timeline(kind, frames):
     the segment i-1 -> i.
     """
     properties = _TIMELINE_PROPERTIES.get(kind)
-    if not properties or len(frames) < 2:
+    if not properties:
         return
 
     if kind == "rotate":
         for kf in frames:
             if "angle" in kf:
                 kf["value"] = kf.pop("angle")
+
+    if len(frames) < 2:
+        for kf in frames:
+            kf.pop("curve", None)
+        return
 
     authored = [kf.pop("curve", None) for kf in frames]
 
@@ -487,15 +495,28 @@ PRESETS = {
 
 def build_spine_json(config):
     """Build a complete Spine JSON structure from config."""
+    config = copy.deepcopy(config)
+    seen = set()
+    if not config.get("bones"):
+        raise ValueError("Bones are required; position_parts output is a layout, not a rig configuration")
+    for bone in config["bones"]:
+        if bone["name"] in seen or (bone.get("parent") and bone["parent"] not in seen):
+            raise ValueError("Bone names must be unique and parents must precede children")
+        seen.add(bone["name"])
+    slot_names = [s["name"] for s in config.get("slots", [])]
+    if len(set(slot_names)) != len(slot_names) or any(s["bone"] not in seen for s in config.get("slots", [])):
+        raise ValueError("Slots need unique names and existing bones")
     bone_names = {b["name"] for b in config["bones"]}
 
     skel_meta = config.get("skeleton", {})
+    if not re.fullmatch(r"4\.[23](?:\.\d+)?", skel_meta.get("spine_version", "4.2.0")):
+        raise ValueError("Declare a supported Spine 4.2 or 4.3 runtime version")
     data_hash = hashlib.md5(json.dumps(config, sort_keys=True).encode()).hexdigest()[:20]
 
     spine = {
         "skeleton": {
             "hash": data_hash,
-            "spine": "4.2.0",
+            "spine": skel_meta.get("spine_version", "4.2.0"),
             "x": -(skel_meta.get("width", 400) // 2),
             "y": 0,
             "width": skel_meta.get("width", 400),
@@ -524,15 +545,19 @@ def build_spine_json(config):
             if data:
                 spine["animations"][anim_name] = data
         else:
-            print(f"  WARNING: Unknown animation preset '{anim_name}', skipping")
+            raise ValueError(f"Unknown preset '{anim_name}'; use custom_animations or the turret builder")
+
+    _to_spine_42(spine["animations"])
 
     # Merge custom animations
-    for name, data in config.get("custom_animations", {}).items():
+    custom = config.get("custom_animations", {})
+    custom_format = config.get("custom_animation_format", "spine")
+    if custom_format not in ("spine", "shorthand"):
+        raise ValueError("custom_animation_format must be spine or shorthand")
+    if custom_format == "shorthand":
+        _to_spine_42(custom)
+    for name, data in custom.items():
         spine["animations"][name] = data
-
-    # Presets and custom animations alike are authored in the shorthand above;
-    # the file declares "spine": "4.2.0", so emit what a 4.x runtime expects.
-    _to_spine_42(spine["animations"])
 
     return spine
 
@@ -540,17 +565,26 @@ def build_spine_json(config):
 def main():
     parser = argparse.ArgumentParser(description="Build Spine JSON skeleton with animations")
     parser.add_argument("--config", required=True, help="Skeleton configuration JSON")
-    parser.add_argument("--output", default="skeleton.json", help="Output Spine JSON")
+    parser.add_argument("--output", default="skeleton.spine-json", help="Output Spine JSON")
+    parser.add_argument("--overwrite", action="store_true", help="Replace this output explicitly")
     args = parser.parse_args()
 
     with open(args.config) as f:
         config = json.load(f)
 
     print(f"Building: {config.get('skeleton', {}).get('name', 'unnamed')}")
-    spine_json = build_spine_json(config)
+    try:
+        spine_json = build_spine_json(config)
+    except (ValueError, KeyError, TypeError) as exc:
+        parser.exit(2, f"ERROR: {exc}\n")
 
-    with open(args.output, "w") as f:
-        json.dump(spine_json, f, indent=2)
+    destination = Path(args.output)
+    if destination.exists() and not args.overwrite:
+        parser.exit(2, "ERROR: Output exists; choose a versioned filename or --overwrite\n")
+    destination.parent.mkdir(parents=True, exist_ok=True)
+
+    serialized = json.dumps(spine_json, indent=2, allow_nan=False)
+    destination.write_text(serialized + "\n", encoding="utf-8")
 
     print(f"Saved: {args.output}")
     print(f"  Bones: {len(spine_json['bones'])}")

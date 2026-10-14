@@ -1,0 +1,27 @@
+{
+  "reference_image": "reference.png",
+  "canvas_width": 400,
+  "canvas_height": 320,
+  "parts": {
+    "pattern": {
+      "x": 150,
+      "y": 100,
+      "width": 112,
+      "height": 96,
+      "original_width": 112,
+      "original_height": 96,
+      "scale": 1.0,
+      "rotation": -0.0,
+      "score": 1.0,
+      "n_matches": 23,
+      "n_good": 23,
+      "n_keypoints": 36,
+      "method": "sift",
+      "z_index": 0,
+      "depth_score": 0.0
+    }
+  },
+  "z_order": [
+    "pattern"
+  ]
+}

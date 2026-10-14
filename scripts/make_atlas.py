@@ -1,102 +1,82 @@
 #!/usr/bin/env python3
-"""
-make_atlas.py — Pack individual body part PNGs into a Spine-compatible texture atlas.
-
-Usage:
-    python3 make_atlas.py --parts parts/ --output atlas/ --name skeleton
-
-Input: Directory of individual .png files (head.png, torso.png, etc.)
-Output: skeleton.png (spritesheet) + skeleton.atlas (Spine atlas metadata)
-"""
-
+"""Pack untrimmed RGBA parts into a deterministic Spine atlas with edge padding."""
 import argparse
-import json
 import math
-import os
-import sys
 from pathlib import Path
 
-try:
-    from PIL import Image
-except ImportError:
-    print("ERROR: Pillow required. Install: pip install Pillow --break-system-packages")
-    sys.exit(1)
+from PIL import Image
+from asset_io import asset_name
 
 
-def next_pow2(v):
-    v -= 1
-    v |= v >> 1; v |= v >> 2; v |= v >> 4; v |= v >> 8; v |= v >> 16
-    return max(v + 1, 1)
+def next_pow2(value):
+    return 1 << max(0, int(value-1).bit_length())
 
 
 def pack(images, padding=2):
-    """Row-based bin packing. Returns (width, height, placements dict)."""
-    sorted_imgs = sorted(images.items(), key=lambda x: -x[1].height)
-
-    total_area = sum(img.width * img.height for img in images.values())
-    est = int(math.sqrt(total_area) * 1.3)
-    atlas_w = next_pow2(est)
-
+    if not images or padding < 1:
+        raise ValueError("At least one image and positive padding are required")
+    ordered = sorted(images.items(), key=lambda item: (-item[1].height, item[0]))
+    area = sum((im.width+2*padding)*(im.height+2*padding) for im in images.values())
+    width = next_pow2(max(max(im.width+2*padding for im in images.values()), math.ceil(math.sqrt(area))))
+    x, y, row_height = padding, padding, 0
     placements = {}
-    rx, ry, rh, max_w = padding, padding, 0, 0
+    for name, im in ordered:
+        asset_name(name)
+        if x + im.width + padding > width:
+            x, y, row_height = padding, y+row_height+2*padding, 0
+        placements[name] = (x, y, im.width, im.height)
+        x += im.width+2*padding
+        row_height = max(row_height, im.height)
+    height = next_pow2(y+row_height+padding)
+    if max(width, height) > 8192:
+        raise ValueError("Atlas exceeds 8192px; reduce source sizes or split the asset")
+    return width, height, placements
 
-    for name, img in sorted_imgs:
-        if rx + img.width + padding > atlas_w:
-            rx = padding
-            ry += rh + padding
-            rh = 0
-        placements[name] = (rx, ry, img.width, img.height)
-        max_w = max(max_w, rx + img.width + padding)
-        rh = max(rh, img.height)
-        rx += img.width + padding
 
-    return next_pow2(max_w), next_pow2(ry + rh + padding), placements
+def write_atlas(images, output, name, padding=2):
+    name, output = asset_name(name), Path(output)
+    if any((output / (name+suffix)).exists() for suffix in (".png", ".atlas")):
+        raise ValueError("Atlas destination exists; choose a new version")
+    images = {k: im.convert("RGBA") for k, im in images.items()}
+    width, height, placements = pack(images, padding)
+    atlas = Image.new("RGBA", (width, height))
+    for region, (x, y, w, h) in placements.items():
+        im = images[region]
+        # Extend border texels without changing region coordinates or source alpha.
+        for dx, dy, crop in ((-padding, 0, (0, 0, 1, h)), (w, 0, (w-1, 0, w, h)),
+                             (0, -padding, (0, 0, w, 1)), (0, h, (0, h-1, w, h))):
+            strip = im.crop(crop)
+            strip = strip.resize((padding, h) if dx else (w, padding), Image.Resampling.NEAREST)
+            atlas.paste(strip, (x+dx, y+dy))
+        for sx, sy, dx, dy in ((0,0,-padding,-padding), (w-1,0,w,-padding),
+                               (0,h-1,-padding,h), (w-1,h-1,w,h)):
+            atlas.paste(Image.new("RGBA", (padding, padding), im.getpixel((sx,sy))), (x+dx,y+dy))
+        atlas.paste(im, (x, y))
+    output.mkdir(parents=True, exist_ok=True)
+    atlas.save(output / (name+".png"))
+    lines = [name+".png", f"size: {width},{height}", "format: RGBA8888",
+             "filter: Linear,Linear", "repeat: none", "pma: false"]
+    for region, (x, y, w, h) in placements.items():
+        lines.extend([region, "  rotate: false", f"  xy: {x}, {y}", f"  size: {w}, {h}",
+                      f"  orig: {w}, {h}", "  offset: 0, 0", "  index: -1"])
+    (output / (name+".atlas")).write_text("\n".join(lines)+"\n", encoding="utf-8")
+    return placements
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Pack PNGs into a Spine texture atlas")
-    parser.add_argument("--parts", required=True, help="Directory with part PNG files")
-    parser.add_argument("--output", default=".", help="Output directory")
-    parser.add_argument("--name", default="skeleton", help="Base filename for atlas")
-    parser.add_argument("--padding", type=int, default=2, help="Pixel padding between regions")
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--parts", type=Path, required=True)
+    parser.add_argument("--output", type=Path, default=Path("."))
+    parser.add_argument("--name", default="skeleton")
+    parser.add_argument("--padding", type=int, default=2)
     args = parser.parse_args()
+    try:
+        images = {p.stem: Image.open(p).convert("RGBA") for p in sorted(args.parts.glob("*.png"))}
+        placements = write_atlas(images, args.output, args.name, args.padding)
+    except (OSError, ValueError) as exc:
+        parser.exit(2, f"ERROR: {exc}\n")
+    print(f"Packed {len(placements)} regions into {args.output / (args.name+'.atlas')}")
 
-    images = {}
-    for f in sorted(os.listdir(args.parts)):
-        if f.lower().endswith(".png"):
-            name = Path(f).stem
-            images[name] = Image.open(os.path.join(args.parts, f)).convert("RGBA")
-            print(f"  {name}: {images[name].width}x{images[name].height}")
-
-    if not images:
-        print("ERROR: No PNGs found in", args.parts)
-        sys.exit(1)
-
-    aw, ah, placements = pack(images, args.padding)
-    print(f"Atlas: {aw}x{ah} ({len(images)} regions)")
-
-    # Compose atlas image
-    atlas = Image.new("RGBA", (aw, ah), (0, 0, 0, 0))
-    for name, (x, y, w, h) in placements.items():
-        atlas.paste(images[name], (x, y))
-
-    os.makedirs(args.output, exist_ok=True)
-    img_path = os.path.join(args.output, f"{args.name}.png")
-    atlas.save(img_path)
-
-    # Write .atlas file
-    lines = [f"{args.name}.png", f"size: {aw},{ah}",
-             "format: RGBA8888", "filter: Linear,Linear", "repeat: none"]
-    for name, (x, y, w, h) in placements.items():
-        lines += [name, "  rotate: false", f"  xy: {x}, {y}",
-                  f"  size: {w}, {h}", f"  orig: {w}, {h}",
-                  "  offset: 0, 0", "  index: -1"]
-
-    atlas_path = os.path.join(args.output, f"{args.name}.atlas")
-    with open(atlas_path, "w") as f:
-        f.write("\n".join(lines) + "\n")
-
-    print(f"Saved: {img_path}, {atlas_path}")
 
 if __name__ == "__main__":
     main()

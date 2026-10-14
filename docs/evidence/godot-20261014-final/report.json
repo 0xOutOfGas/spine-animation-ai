@@ -1,0 +1,28 @@
+{
+  "result": "PASS",
+  "source_sha256": {
+    "assets/godot/stationary_turret.gd": "7b3b239f5f58b463778b915dfc5c68e5a54975bd7de0897bb0e5089522183f6f",
+    "tests/godot/test_turret.gd": "d46bb575c4f5873e824941e33c43ba79923bbe56a7da0eb3b73f1f174f430d13",
+    "scripts/build_turret.py": "ba486d5da1c3f935c594a9da980562f98a992d8f61fa1cdfaffcb3e9b7ec3300",
+    "scripts/turret_preview.py": "9943d779765db8c60060e07646088b7183057dff4a8aa659d711a31664eea9e7",
+    "examples/toywatch-turret/export/toy-turret.spine-json": "b39ad83126bf792ccf53a897ff3f659887d03779c341132adc2da9024531ea4c",
+    "examples/toywatch-turret/export/toy-turret.atlas": "42ad67899c8d2d286cb679bc5e7a5ebc74252dc3790c46fd4315979816cd9a2d",
+    "examples/toywatch-turret/export/toy-turret.png": "5f3455150c1fd8c054fc674877393fe45ea87f86d856eb089b4b4d03f11ef215"
+  },
+  "runtime_sha256": {
+    "macos/libspine_godot.macos.editor.framework/libspine_godot.macos.editor": "ad15111f2d30151eb0428698015365a1fa5b84dd525984b71a0b54e4cfa204c6",
+    "macos/libspine_godot.macos.template_release.framework/libspine_godot.macos.template_release": "a88e65c1539e415eed7e121f3db200481d94aff96ce25200b89325acc44f8f89",
+    "macos/libspine_godot.macos.template_debug.framework/libspine_godot.macos.template_debug": "9ced3bbeefa62351e57e8e3d1bbd7c1067005cf7f671d4077c6465bf77cee4a6",
+    "macos/libspine_godot.macos.template_debug.framework/Resources/Info.plist": "e5c095248c5e42c3cc29d102a8201146aed4d8137d282d3744ab53ff2c582427",
+    "macos/libspine_godot.macos.template_release.framework/Resources/Info.plist": "f7a236836e8ade713b56766f2fef4fd512b9947109731e33d18c842a108341b9",
+    "macos/libspine_godot.macos.editor.framework/Resources/Info.plist": "82a0514db0a8a62b25236127d402e230908f1bdb56910568bab40cf2b85eb4d1"
+  },
+  "import_exit_code": 0,
+  "runtime_exit_code": 0,
+  "checks": 351,
+  "engine": "4.7.2-stable (official)",
+  "failures": 0,
+  "rapid_shots": 30,
+  "spine_data": "4.3.26",
+  "yaw_samples": 49
+}

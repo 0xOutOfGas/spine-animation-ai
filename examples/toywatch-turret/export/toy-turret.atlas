@@ -1,0 +1,27 @@
+toy-turret.png
+size: 256,256
+format: RGBA8888
+filter: Linear,Linear
+repeat: none
+pma: false
+base
+  rotate: false
+  xy: 2, 2
+  size: 120, 117
+  orig: 120, 117
+  offset: 0, 0
+  index: -1
+receiver
+  rotate: false
+  xy: 126, 2
+  size: 100, 91
+  orig: 100, 91
+  offset: 0, 0
+  index: -1
+barrel
+  rotate: false
+  xy: 2, 123
+  size: 112, 42
+  orig: 112, 42
+  offset: 0, 0
+  index: -1

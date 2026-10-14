@@ -1,0 +1,106 @@
+{
+  "schema": 1,
+  "name": "toy-turret",
+  "profile": "toywatch_turret",
+  "spine_version": "4.3.26",
+  "canvas_size_px": [
+    256.0,
+    256.0
+  ],
+  "pivot_px": [
+    128.0,
+    128.0
+  ],
+  "forward_px": [
+    1.0,
+    0.0
+  ],
+  "godot_display_scale": 0.25,
+  "cell_size_px": 72.0,
+  "display_size_px": 64.0,
+  "head_envelope_cell": 0.3320650060001453,
+  "head_max_radius_cell": 0.45,
+  "fixed_base_radius_cell": 0.21149938025257242,
+  "fire": {
+    "duration": 0.18,
+    "peak_time": 0.03,
+    "recover_time": 0.18,
+    "recoil_cell": 0.01,
+    "recoil_source_px": 2.88
+  },
+  "clips": {
+    "idle": {
+      "loop": true
+    },
+    "fire": {
+      "loop": false
+    }
+  },
+  "parts": [
+    {
+      "name": "base",
+      "role": "base",
+      "position_px": [
+        68.0,
+        69.5
+      ],
+      "size_px": [
+        120,
+        117
+      ],
+      "sha256": "b2938735363f58a167a4df8dc136a1a77d6f6c0af52c192ef6472542457ee2cf",
+      "radius_cell": 0.21149938025257242
+    },
+    {
+      "name": "receiver",
+      "role": "aim",
+      "position_px": [
+        78.0,
+        82.5
+      ],
+      "size_px": [
+        100,
+        91
+      ],
+      "sha256": "e670246b2de4d5a6ab640e9aab176289d424a2cc58a248a15bf72f4977658d6e",
+      "radius_cell": 0.1781439506921576
+    },
+    {
+      "name": "barrel",
+      "role": "recoil",
+      "position_px": [
+        111.0,
+        107.0
+      ],
+      "size_px": [
+        112,
+        42
+      ],
+      "sha256": "240fb5a6718329eee39e5531a0e4e3b8e0cb6a393b838b6066e3557f773ce086",
+      "radius_cell": 0.3320650060001453
+    }
+  ],
+  "muzzles": [
+    {
+      "bone": "muzzle_main",
+      "setup_px": [
+        220.5,
+        128.0
+      ],
+      "setup_spine": [
+        92.5,
+        0.0
+      ]
+    }
+  ],
+  "verification": {
+    "geometry": "passed",
+    "engine": "not-run"
+  },
+  "source_config_sha256": "ff3b7747a7e3a4eb54e422ed12f9a8510ce21f136932e5ad9300b0cf5af9d4f6",
+  "outputs": {
+    "toy-turret.png": "5f3455150c1fd8c054fc674877393fe45ea87f86d856eb089b4b4d03f11ef215",
+    "toy-turret.atlas": "42ad67899c8d2d286cb679bc5e7a5ebc74252dc3790c46fd4315979816cd9a2d",
+    "toy-turret.spine-json": "b39ad83126bf792ccf53a897ff3f659887d03779c341132adc2da9024531ea4c"
+  }
+}

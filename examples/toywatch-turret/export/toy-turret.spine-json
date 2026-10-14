@@ -1,0 +1,124 @@
+{
+  "skeleton": {
+    "spine": "4.3.26",
+    "x": -128.0,
+    "y": -128.0,
+    "width": 256.0,
+    "height": 256.0,
+    "images": "./images/"
+  },
+  "bones": [
+    {
+      "name": "root"
+    },
+    {
+      "name": "base",
+      "parent": "root"
+    },
+    {
+      "name": "aim",
+      "parent": "root"
+    },
+    {
+      "name": "recoil",
+      "parent": "aim"
+    },
+    {
+      "name": "muzzle_main",
+      "parent": "recoil",
+      "x": 92.5,
+      "y": 0.0
+    }
+  ],
+  "slots": [
+    {
+      "name": "base",
+      "bone": "base",
+      "attachment": "base"
+    },
+    {
+      "name": "receiver",
+      "bone": "aim",
+      "attachment": "receiver"
+    },
+    {
+      "name": "barrel",
+      "bone": "recoil",
+      "attachment": "barrel"
+    }
+  ],
+  "skins": [
+    {
+      "name": "default",
+      "attachments": {
+        "base": {
+          "base": {
+            "x": 0.0,
+            "y": 0.0,
+            "width": 120,
+            "height": 117
+          }
+        },
+        "receiver": {
+          "receiver": {
+            "x": 0.0,
+            "y": 0.0,
+            "width": 100,
+            "height": 91
+          }
+        },
+        "barrel": {
+          "barrel": {
+            "x": 39.0,
+            "y": 0.0,
+            "width": 112,
+            "height": 42
+          }
+        }
+      }
+    }
+  ],
+  "animations": {
+    "idle": {
+      "bones": {
+        "recoil": {
+          "translate": [
+            {
+              "time": 0.0,
+              "x": 0.0,
+              "y": 0.0
+            },
+            {
+              "time": 1.0,
+              "x": 0.0,
+              "y": 0.0
+            }
+          ]
+        }
+      }
+    },
+    "fire": {
+      "bones": {
+        "recoil": {
+          "translate": [
+            {
+              "time": 0.0,
+              "x": 0.0,
+              "y": 0.0
+            },
+            {
+              "time": 0.03,
+              "x": -2.88,
+              "y": 0.0
+            },
+            {
+              "time": 0.18,
+              "x": 0.0,
+              "y": 0.0
+            }
+          ]
+        }
+      }
+    }
+  }
+}

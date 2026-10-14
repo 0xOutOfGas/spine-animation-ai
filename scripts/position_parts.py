@@ -415,7 +415,7 @@ def generate_debug(ref_path, parts_folder, positions, z_order, fg_mask, debug_di
 
         flann = cv2.FlannBasedMatcher(dict(algorithm=1, trees=5), dict(checks=150))
         matches = flann.knnMatch(pdes, ref_des, k=2)
-        good = [m for m, n in matches if len([m,n])==2 and m.distance < 0.8*n.distance]
+        good = [pair[0] for pair in matches if len(pair)==2 and pair[0].distance < 0.8*pair[1].distance]
 
         if len(good) >= 4:
             src = np.float32([pkp[m.queryIdx].pt for m in good]).reshape(-1,1,2)
@@ -449,7 +449,14 @@ def main():
     p.add_argument("--ratio", type=float, default=0.80,
                    help="Lowe's ratio threshold (default: 0.80)")
     p.add_argument("--debug", default=None)
+    p.add_argument("--overwrite", action="store_true", help="Replace this layout explicitly")
     args = p.parse_args()
+
+    if os.path.exists(args.output) and not args.overwrite:
+        p.error("Output exists; choose a versioned path or --overwrite")
+    if not 0 < args.ratio < 1 or args.min_matches < 2:
+        p.error("Require 0 < ratio < 1 and min-matches >= 2")
+    cv2.setRNGSeed(0)
 
     print("=" * 60)
     print("PHASE 1: SIFT + RANSAC Homography")
@@ -480,6 +487,7 @@ def main():
         "canvas_width": ref_img.width, "canvas_height": ref_img.height,
         "parts": positions, "z_order": z_order,
     }
+    Path(args.output).parent.mkdir(parents=True, exist_ok=True)
     with open(args.output, "w") as f:
         json.dump(output, f, indent=2)
     print(f"\nLayout saved: {args.output}")

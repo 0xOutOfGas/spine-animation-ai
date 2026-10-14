@@ -1,0 +1,6 @@
+interface:
+  display_name: "Spine Animation for Codex"
+  short_description: "ChatGPT art, Spine rigs, and 360° Godot turret recoil"
+  default_prompt: "Use $spine-animation-codex to make a top-down turret with a fixed base, 360-degree aiming and a short fire recoil for Godot."
+policy:
+  allow_implicit_invocation: true

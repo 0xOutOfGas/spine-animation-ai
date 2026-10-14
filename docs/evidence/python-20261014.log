@@ -1,0 +1,18 @@
+test_atlas_keeps_pixel_alpha_and_regions_do_not_overlap (test_pipeline.PipelineTests.test_atlas_keeps_pixel_alpha_and_regions_do_not_overlap) ... ok
+test_auto_components_preserve_faint_parts_and_sort (test_pipeline.PipelineTests.test_auto_components_preserve_faint_parts_and_sort) ... ok
+test_budget_rejects_global_toywatch_relaxation (test_pipeline.PipelineTests.test_budget_rejects_global_toywatch_relaxation) ... ok
+test_crop_rejects_opaque_inputs_and_bad_regions_without_writes (test_pipeline.PipelineTests.test_crop_rejects_opaque_inputs_and_bad_regions_without_writes) ... ok
+test_diagonal_recoil_has_correct_spine_sign_at_every_yaw (test_pipeline.PipelineTests.test_diagonal_recoil_has_correct_spine_sign_at_every_yaw) ... ok
+test_exact_endpoint_bound_covers_continuous_recoil (test_pipeline.PipelineTests.test_exact_endpoint_bound_covers_continuous_recoil) ... ok
+test_faint_pixel_corners_enforce_full_rotation_envelope (test_pipeline.PipelineTests.test_faint_pixel_corners_enforce_full_rotation_envelope) ... ok
+test_invalid_geometry_does_not_make_partial_output (test_pipeline.PipelineTests.test_invalid_geometry_does_not_make_partial_output) ... ok
+test_named_crop_preserves_white_and_faint_alpha (test_pipeline.PipelineTests.test_named_crop_preserves_white_and_faint_alpha) ... ok
+test_player_aliases_godot_json_and_enforces_runtime_version (test_pipeline.PipelineTests.test_player_aliases_godot_json_and_enforces_runtime_version) ... ok
+test_portable_export_reproduces_core_artifacts (test_pipeline.PipelineTests.test_portable_export_reproduces_core_artifacts) ... ok
+test_turret_fixed_root_procedural_aim_and_two_clips (test_pipeline.PipelineTests.test_turret_fixed_root_procedural_aim_and_two_clips) ... ok
+test_wire_custom_curves_preserved_and_input_not_mutated (test_pipeline.PipelineTests.test_wire_custom_curves_preserved_and_input_not_mutated) ... ok
+
+----------------------------------------------------------------------
+Ran 13 tests in 0.144s
+
+OK

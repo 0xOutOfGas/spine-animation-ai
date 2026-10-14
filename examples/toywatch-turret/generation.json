@@ -1,0 +1,38 @@
+{
+  "tool": "image_gen (built-in ChatGPT Image)",
+  "transparent_background": true,
+  "selected_source": "parts-sheet.png",
+  "source_sha256": "36f3fe9d4aae9c59432725b45d03a8ea6d142f8f5e5d749245b0feb12bd2bd1f",
+  "source_size_px": [
+    2172,
+    724
+  ],
+  "reference_roles": [
+    "initial generated sheet, used as edit target for an overhead-view correction"
+  ],
+  "final_prompt": "Refine this existing THREE-component transparent turret parts sheet for STRICTLY orthographic directly overhead game rendering and free 360-degree rotation. Keep the same three components in the same horizontal order, palette, playful hand-painted toy style, original cream/teal pedestal and orange/teal receiver identity. Correct only the camera/view logic of the rotating receiver and separate barrel: neither may show any side face, perspective ellipse, or open bore visible face-on. Make the middle receiver a pure round overhead plate with a central swivel and a short flat barrel connection surface on its right, with no visible vertical rim. Make the right barrel a clearly RIGHT-pointing straight rectangular/rounded cylinder silhouette seen from above, parallel edges, orange rear collar on the LEFT, teal tube, cream muzzle collar at RIGHT. The bore opening must not appear as a large oval or circular side-view hole: from exactly overhead it is only a thin dark terminal line along the right edge. Keep all three components isolated, with clean transparent alpha and clear gaps; complete hidden surfaces to support small sliding recoil. No additional parts, labels, arrows, text, shadows on ground, or assembled turret. Maintain actual transparency.",
+  "operations": {
+    "regions": "regions.json",
+    "resample": "Pillow LANCZOS, preserve source RGBA; no alpha threshold",
+    "output_sizes_px": {
+      "base": [
+        120,
+        117
+      ],
+      "receiver": [
+        100,
+        91
+      ],
+      "barrel": [
+        112,
+        42
+      ]
+    }
+  },
+  "measured_parts_sha256": {
+    "base": "b2938735363f58a167a4df8dc136a1a77d6f6c0af52c192ef6472542457ee2cf",
+    "receiver": "e670246b2de4d5a6ab640e9aab176289d424a2cc58a248a15bf72f4977658d6e",
+    "barrel": "240fb5a6718329eee39e5531a0e4e3b8e0cb6a393b838b6066e3557f773ce086"
+  },
+  "scope": "Independent generic example; does not replace Toywatch game artwork."
+}

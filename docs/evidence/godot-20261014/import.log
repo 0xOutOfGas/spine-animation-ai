@@ -1,0 +1,64 @@
+Godot Engine v4.7.2.stable.official.ed1daf0bf - https://godotengine.org
+
+[   0% ] [90m[1mfirst_scan_filesystem[22m | Started 项目初始化 (5 steps)[39m[0m
+[   0% ] [90m[1mfirst_scan_filesystem[22m | 正在扫描文件结构……[39m[0m
+[  16% ] [90m[1mfirst_scan_filesystem[22m | 正在加载全局类名……[39m[0m
+[  33% ] [90m[1mfirst_scan_filesystem[22m | 正在校验 GDExtension……[39m[0m
+[  50% ] [90m[1mfirst_scan_filesystem[22m | 正在创建自动加载脚本……[39m[0m
+[  66% ] [90m[1mfirst_scan_filesystem[22m | 正在初始化插件……[39m[0m
+[  83% ] [90m[1mfirst_scan_filesystem[22m | 正在启动文件扫描……[39m[0m
+[92m[ DONE ][39m [1mfirst_scan_filesystem[22m
+[0m
+[   0% ] [90m[1mupdate_scripts_classes[22m | Started 正在注册全局类…… (2 steps)[39m[0m
+[   0% ] [90m[1mupdate_scripts_classes[22m | [39m[0m
+[  33% ] [90m[1mupdate_scripts_classes[22m | [39m[0m
+[92m[ DONE ][39m [1mupdate_scripts_classes[22m
+[0m
+[   0% ] [90m[1m_update_scan_actions[22m | Started 正在扫描动作…… (4 steps)[39m[0m
+[   0% ] [90m[1m_update_scan_actions[22m | barrel.png[39m[0m
+[  20% ] [90m[1m_update_scan_actions[22m | base.png[39m[0m
+[  40% ] [90m[1m_update_scan_actions[22m | receiver.png[39m[0m
+[  60% ] [90m[1m_update_scan_actions[22m | toy-turret.png[39m[0m
+[92m[ DONE ][39m [1m_update_scan_actions[22m
+[0m
+[   0% ] [90m[1mreimport[22m | Started 正在导入或重新导入资产 (4 steps)[39m[0m
+[   0% ] [90m[1mreimport[22m | 正在准备重新导入文件……[39m[0m
+[  20% ] [90m[1mreimport[22m | 正在准备重新导入文件……[39m[0m
+[  40% ] [90m[1mreimport[22m | 正在准备重新导入文件……[39m[0m
+[  60% ] [90m[1mreimport[22m | 正在准备重新导入文件……[39m[0m
+[   0% ] [90m[1mreimport[22m | 正在执行重新导入的前置操作……[39m[0m
+[   0% ] [90m[1mreimport[22m | barrel.png[39m[0m
+[  20% ] [90m[1mreimport[22m | base.png[39m[0m
+[  40% ] [90m[1mreimport[22m | receiver.png[39m[0m
+[  60% ] [90m[1mreimport[22m | toy-turret.png[39m[0m
+[  80% ] [90m[1mreimport[22m | 正在结束资产导入……[39m[0m
+[92m[ DONE ][39m [1mreimport[22m
+[0m
+[   0% ] [90m[1mreimport[22m | Started 正在导入或重新导入资产 (4 steps)[39m[0m
+[   0% ] [90m[1mreimport[22m | 正在执行重新导入的后置操作……[39m[0m
+[92m[ DONE ][39m [1mreimport[22m
+[0m
+[   0% ] [90m[1mloading_editor_layout[22m | Started 正在加载编辑器 (5 steps)[39m[0m
+[   0% ] [90m[1mloading_editor_layout[22m | 正在加载编辑器布局……[39m[0m
+[  16% ] [90m[1mloading_editor_layout[22m | 正在加载停靠面板……[39m[0m
+[92m[ DONE ][39m [1mloading_editor_layout[22m
+[0m
+
+================================================================
+handle_crash: Program crashed with signal 11
+Engine version: Godot Engine v4.7.2.stable.official (ed1daf0bf001b61586d9930840f2f1394092c079)
+Dumping the backtrace. Please include this when reporting the bug on: https://github.com/godotengine/godot/issues
+Load address: 100150000
+
+[1] 18e5dc144 (libsystem_platform.dylib+4144) - _sigtramp + 56
+[2] 102308dbc (main+21b8dbc) - SDL_GetPerformanceFrequency + 4162848
+[3] 1022e83c0 (main+21983c0) - SDL_GetPerformanceFrequency + 4029220
+[4] 10232969c (main+21d969c) - SDL_GetPerformanceFrequency + 4296192
+[5] 104edc37c (main+4d8c37c) - ZSTD_decompressStream_simpleArgs + 6538008
+[6] 104edc664 (main+4d8c664) - ZSTD_decompressStream_simpleArgs + 6538752
+[7] 1008c294c (main+77294c) - main + 155224
+[8] 10083a578 (main+6ea578) - mvk::SPIRVToMSLConverter::convert(mvk::SPIRVToMSLConversionConfiguration&, mvk::SPIRVToMSLConversionResult&, bool, bool, bool)
+[9] 10089cea4 (main+74cea4) - main (in Godot) + 944
+[10] 18e1fbe80 (dyld+31e80) - start + 6688
+-- END OF C++ BACKTRACE --
+================================================================
